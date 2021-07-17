@@ -1,10 +1,10 @@
 # Timer
 
-A simple thread-safe timer util library written in stdandared C++ 20, for measuring and recording the time spent performing different functions.
+A simple thread-safe timer util library written in stdandared C++20, for measuring and recording the time spent performing different functions.
 
 ```cpp
 int main() {
-    ubn::timer t("Main therad");
+    ubn::timer t("Main thread");
     std::jthread([&] {
         doSomeThing(1s);
         t.setTag("Sub thread", "Thread 1");
