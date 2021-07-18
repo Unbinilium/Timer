@@ -143,7 +143,7 @@ namespace ubn {
 
         constexpr void printInfoHistory(const char* _tag_name) noexcept {
             const ticket_guard tg(this);
-            if constexpr (m_info_history_map.contains(_tag_name)) {
+            if (m_info_history_map.contains(_tag_name)) {
                 for (auto& info_history : m_info_history_map[_tag_name]) {
                     printInfo(_tag_name, info_history);
                 }
@@ -164,7 +164,7 @@ namespace ubn {
         constexpr bool clearInfoHistory(const char* _tag_name) noexcept {
             const ticket_guard tg(this);
             const auto status { eraseInfoHistory(_tag_name) };
-            if constexpr (status) { initInfoHistory(_tag_name); }
+            if (status) { initInfoHistory(_tag_name, T::now()); }
             return std::move(status);
         }
 
@@ -232,7 +232,7 @@ namespace ubn {
 
         constexpr void printAllInfo(const std::map<std::string, P>& _duration_map) noexcept {
             for (const auto& [key, _] : _duration_map) {
-                if constexpr (m_info_history_map.contains(key)) {
+                if (m_info_history_map.contains(key)) {
                     printInfo(key.c_str(), m_info_history_map[key].back());
                 }
             }
@@ -247,7 +247,7 @@ namespace ubn {
         }
 
         constexpr bool eraseTimePoint(const char* _tag_name) noexcept {
-            if constexpr (m_time_point_map.contains(_tag_name)) {
+            if (m_time_point_map.contains(_tag_name)) {
                 m_time_point_map.erase(_tag_name);
                 return true;
             } else {
@@ -256,7 +256,7 @@ namespace ubn {
         }
 
         constexpr bool eraseDuration(const char* _tag_name) noexcept {
-            if constexpr (m_duration_map.contains(_tag_name)) {
+            if (m_duration_map.contains(_tag_name)) {
                 m_duration_map.erase(_tag_name);
                 return true;
             } else {
@@ -265,7 +265,7 @@ namespace ubn {
         }
 
         constexpr bool eraseInfoHistory(const char* _tag_name) noexcept {
-            if constexpr (m_info_history_map.contains(_tag_name)) {
+            if (m_info_history_map.contains(_tag_name)) {
                 m_info_history_map.erase(_tag_name);
                 return true;
             } else {
@@ -274,7 +274,7 @@ namespace ubn {
         }
 
     private:
-        constexpr void lock() noexcept {
+        constexpr void lock() const noexcept {
             const auto ticket { m_ticket_in.fetch_add(1, std::memory_order::acquire) };
             while (true) {
                 const auto now { m_ticket_out.load(std::memory_order::acquire) };
@@ -283,7 +283,7 @@ namespace ubn {
             }
         }
 
-        constexpr void unlock() noexcept {
+        constexpr void unlock() const noexcept {
             m_ticket_out.fetch_add(1, std::memory_order::release);
             m_ticket_out.notify_all();
         }
