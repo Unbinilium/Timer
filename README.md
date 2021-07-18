@@ -46,13 +46,13 @@ If init a timer with a specified `_self_tag_name` (not an empty string `""`), it
 explicit timer(
     const std::string& _self_tag_name = "timer",
     const std::size_t _info_history_size = 5
-)
+);
 
 explicit timer(
     const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
     const std::string& _self_tag_name,
     const std::size_t _info_history_size
-)
+);
  ```
 
 - Operator
@@ -60,7 +60,7 @@ explicit timer(
 Update duration(s) by substract another timer.
 
 ```cpp
-void operator-(timer& _timer)
+void operator-(timer& _timer);
 ```
 
 - General
