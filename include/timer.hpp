@@ -295,7 +295,7 @@ namespace ubn {
         };
 
         std::string const m_self_tag_name;
-        std::size_t m_info_history_size;
+        std::size_t const m_info_history_size;
 
         std::map<std::string, std::chrono::time_point<T>> m_time_point_map;
         std::map<std::string, P> m_duration_map;
