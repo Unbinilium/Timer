@@ -210,7 +210,7 @@ namespace ubn {
             info["id"] += 1.;
             info["time_point_at"] = m_time_point_map[_tag_name].time_since_epoch().count();
             info["cur_duration"] = duration_count;
-            info["frequency"] = 1. / std::chrono::duration<double, std::ratio<1>>(_duration).count();
+            info["frequency"] = 1. / std::chrono::duration<double, std::ratio<1l>>(_duration).count();
             while (m_info_history_map[_tag_name].size() >= m_info_history_size) {
                 m_info_history_map[_tag_name].pop_front();
             }
