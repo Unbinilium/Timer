@@ -15,7 +15,6 @@ int main() {
     });
     doSomeThing(0.2s);
     t.setTag("Thread 1", "Thread 2");
-    t.printAllInfoHistory();
 }
 ```
 
@@ -41,17 +40,17 @@ template <
 
 - Constructor
 
-If init a timer with a specified `_self_tag_name`, it will print all its info history with this tag name after the timer was destructed. The default info history records limit is set to `5` by `_info_history_size`, it should always large than `0`.
+If init a timer with a specified `_self_tag_name` (not an empty string `""`), it will print all info history records with the identifier of this tag name after the timer was destructed. The default info history records limit is set to `5` by `_info_history_size`, it should always larger than `0`.
 
  ```cpp
 explicit timer(
-    const std::string&& _self_tag_name = "",
+    const std::string& _self_tag_name = "timer",
     const std::size_t _info_history_size = 5
 )
 
 explicit timer(
-    const std::map<std::string, std::chrono::time_point<T>>&& _time_point_map,
-    const std::string&& _self_tag_name,
+    const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
+    const std::string& _self_tag_name,
     const std::size_t _info_history_size
 )
  ```

@@ -21,23 +21,23 @@ namespace ubn {
     class timer {
     public:
         explicit timer(
-            const std::string&& _self_tag_name = "",
+            const std::string& _self_tag_name = "timer",
             const std::size_t _info_history_size = 5
         ) : m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {
             setTag(m_self_tag_name.c_str());
         }
 
         explicit timer(
-            const std::map<std::string, std::chrono::time_point<T>>&& _time_point_map,
-            const std::string&& _self_tag_name,
+            const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
+            const std::string& _self_tag_name,
             const std::size_t _info_history_size
         ) : m_time_point_map(_time_point_map), m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {}
 
         ~timer() {
             if (!m_self_tag_name.empty()) {
                 setTag(m_self_tag_name.c_str());
-                printInfoHistory(m_self_tag_name.c_str());
             }
+            printAllInfoHistory();
         }
 
         inline void operator-(timer& _timer) {
@@ -218,7 +218,8 @@ namespace ubn {
         }
 
         inline void printInfo(const char* _tag_name, std::unordered_map<std::string, double>& _info_history) {
-            std::cout << "[timer] Info '"
+            std::cout << "["
+                << m_self_tag_name << "] Info '"
                 << _tag_name << "' -> "
                 << static_cast<std::size_t>(_info_history["id"]) << " set at: "
                 << static_cast<std::size_t>(_info_history["time_point_at"]) << " duration (cur/min/max/avg): "
