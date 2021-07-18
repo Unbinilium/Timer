@@ -14,7 +14,7 @@ int main() {
         t.setTag("Sub thread", "Thread 2");
     });
     doSomeThing(0.2s);
-    t.setTag("Thread 1", "Thread 2");
+    t.setTag("Sub thread", "Thread 1", "Thread 2");
 }
 ```
 
