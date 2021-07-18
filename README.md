@@ -22,7 +22,7 @@ To use timer util library with your project, please clone this repository as git
 
 ```cmake
 add_subdirectory(<time source dir>)
-target_link_libraries(<your project name> timer)
+target_link_libraries(<your project name> PUBLIC timer)
 ```
 
 ## Class
