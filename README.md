@@ -1,6 +1,6 @@
 # Timer
 
-A simple thread-safe timer util library written in stdandared C++20, for measuring and recording the time spent performing different functions.
+A simple thread-safe timer util library written in stdandard C++20, for measuring and recording the time spent performing different functions.
 
 ```cpp
 int main() {
