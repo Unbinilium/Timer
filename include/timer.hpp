@@ -33,7 +33,7 @@ namespace ubn {
             const std::size_t _info_history_size
         ) : m_time_point_map(_time_point_map), m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {}
 
-        ~timer() {
+        inline ~timer() {
             if (!m_self_tag_name.empty()) {
                 setTag(m_self_tag_name.c_str());
             }
