@@ -22,7 +22,7 @@ namespace ubn {
     public:
         constexpr explicit timer(
             const std::string& _self_tag_name = "timer",
-            const std::size_t _info_history_size = 5
+            const std::size_t& _info_history_size = 5
         ) noexcept : m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {
             setTag(m_self_tag_name.c_str());
         }
@@ -30,7 +30,7 @@ namespace ubn {
         constexpr explicit timer(
             const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
             const std::string& _self_tag_name,
-            const std::size_t _info_history_size
+            const std::size_t& _info_history_size
         ) noexcept : m_time_point_map(_time_point_map), m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {}
 
         constexpr ~timer() noexcept {
