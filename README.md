@@ -4,7 +4,7 @@ A simple thread-safe timer util library written in stdandard C++20, for measurin
 
 ```cpp
 int main() {
-    ubn::timer t("Main thread");
+    ubn::timer t("Main ⏱");
     std::jthread([&] {
         doSomeThing(1s);
         t.setTag("Sub thread", "Thread 1");
@@ -31,10 +31,13 @@ Defined in header `timer.hpp`, namespace `ubn`:
 
 ```cpp
 template <
-	typename T = std::chrono::high_resolution_clock,
-	typename P = std::chrono::milliseconds
+    typename T = std::chrono::high_resolution_clock,
+    typename P = std::chrono::milliseconds,
+    typename Q = double
 > class timer;
 ```
+
+`T` is used for specifing the clock type, `P` for specifying the time precision type and `Q` for specifying the time casting unit.
 
 ## Member functions
 
@@ -44,13 +47,13 @@ If init a timer with a specified `_self_tag_name` (not an empty string `""`), it
 
  ```cpp
 explicit timer(
-    const std::string& _self_tag_name = "timer",
+    const char* _self_tag_name = "timer",
     const std::size_t& _info_history_size = 5
 );
 
 explicit timer(
     const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
-    const std::string& _self_tag_name,
+    const char* _self_tag_name,
     const std::size_t& _info_history_size
 );
  ```
