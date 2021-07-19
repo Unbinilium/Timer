@@ -45,13 +45,13 @@ If init a timer with a specified `_self_tag_name` (not an empty string `""`), it
  ```cpp
 explicit timer(
     const std::string& _self_tag_name = "timer",
-    const std::size_t _info_history_size = 5
+    const std::size_t& _info_history_size = 5
 );
 
 explicit timer(
     const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
     const std::string& _self_tag_name,
-    const std::size_t _info_history_size
+    const std::size_t& _info_history_size
 );
  ```
 
