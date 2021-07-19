@@ -45,10 +45,10 @@ namespace ubn {
         constexpr void operator-(timer& _timer) noexcept {
             const ticket_guard tg(this);
             for (const auto& [key, _] : m_time_point_map) {
-                const auto duration {
+                updateInfoHistory(
+                    key.c_str(),
                     std::chrono::duration_cast<P>(m_time_point_map[key] - _timer.getTimePoint(key.c_str()))
-                };
-                updateInfoHistory(key.c_str(), std::move(duration));
+                );
             }
         }
 
@@ -167,7 +167,7 @@ namespace ubn {
             const ticket_guard tg(this);
             const auto status { eraseInfoHistory(_tag_name) };
             if (status) { initInfoHistory(_tag_name, T::now()); }
-            return std::move(status);
+            return status;
         }
 
         template <const_char_pointer Arg, const_char_pointer... Args>
