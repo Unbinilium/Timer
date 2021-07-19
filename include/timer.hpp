@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstring>
 #include <deque>
 #include <iostream>
 #include <map>
@@ -12,30 +13,31 @@
 #include <utility>
 
 namespace ubn {
-   namespace timer_concept {
-        template <typename T>
-        concept const_char_pointer = std::is_nothrow_convertible_v<T, const char*>;
-   }
+    template <typename T>
+    concept const_char_pointer = std::is_nothrow_convertible_v<T, const char*>;
 
-    template <typename T = std::chrono::high_resolution_clock, typename P = std::chrono::milliseconds>
-    class timer {
+    template <
+        typename T = std::chrono::high_resolution_clock,
+        typename P = std::chrono::milliseconds,
+        typename Q = double
+    > class timer {
     public:
         constexpr explicit timer(
-            const std::string& _self_tag_name = "timer",
+            const char* _self_tag_name = "timer",
             const std::size_t& _info_history_size = 5
         ) noexcept : m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {
-            setTag(m_self_tag_name.c_str());
+            setTag(m_self_tag_name);
         }
 
         constexpr explicit timer(
             const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
-            const std::string& _self_tag_name,
+            const char* _self_tag_name,
             const std::size_t& _info_history_size
         ) noexcept : m_time_point_map(_time_point_map), m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {}
 
         constexpr ~timer() noexcept {
-            if (!m_self_tag_name.empty()) {
-                setTag(m_self_tag_name.c_str());
+            if (std::strlen(m_self_tag_name) != 0) {
+                setTag(m_self_tag_name);
             }
             printAllInfoHistory();
         }
@@ -67,7 +69,7 @@ namespace ubn {
             return time_point;
         }
 
-        template <timer_concept::const_char_pointer Arg, timer_concept::const_char_pointer... Args>
+        template <const_char_pointer Arg, const_char_pointer... Args>
         constexpr auto setTag(const Arg& _arg, const Args&... _args) noexcept {
             setTag(_arg);
             return setTag(std::forward<const Args>(_args)...);
@@ -92,7 +94,7 @@ namespace ubn {
                 eraseInfoHistory(_tag_name);
         }
 
-        template <timer_concept::const_char_pointer Arg, timer_concept::const_char_pointer... Args>
+        template <const_char_pointer Arg, const_char_pointer... Args>
         constexpr bool eraseTag(const Arg& _arg, const Args&... _args) noexcept {
             return eraseTag(_arg) & eraseTag(std::forward<const Args>(_args)...);
         }
@@ -113,7 +115,7 @@ namespace ubn {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
                 ? m_info_history_map[_tag_name].back()
-                : std::unordered_map<std::string, double>();
+                : std::unordered_map<std::string, Q>();
         }
 
         constexpr void printInfo(const char* _tag_name) noexcept {
@@ -123,7 +125,7 @@ namespace ubn {
             }
         }
 
-        template <timer_concept::const_char_pointer Arg, timer_concept::const_char_pointer... Args>
+        template <const_char_pointer Arg, const_char_pointer... Args>
         constexpr void printInfo(const Arg& _arg, const Args&... _args) noexcept {
             printInfo(_arg);
             printInfo(std::forward<const Args>(_args)...);
@@ -138,7 +140,7 @@ namespace ubn {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
                 ? m_info_history_map[_tag_name]
-                : std::deque<std::unordered_map<std::string, double>>();
+                : std::deque<std::unordered_map<std::string, Q>>();
         }
 
         constexpr void printInfoHistory(const char* _tag_name) noexcept {
@@ -150,7 +152,7 @@ namespace ubn {
             }
         }
 
-        template <timer_concept::const_char_pointer Arg, timer_concept::const_char_pointer... Args>
+        template <const_char_pointer Arg, const_char_pointer... Args>
         constexpr void printInfoHistory(const Arg& _arg, const Args&... _args) noexcept {
             printInfoHistory(_arg);
             printInfoHistory(std::forward<const Args>(_args)...);
@@ -168,7 +170,7 @@ namespace ubn {
             return std::move(status);
         }
 
-        template <timer_concept::const_char_pointer Arg, timer_concept::const_char_pointer... Args>
+        template <const_char_pointer Arg, const_char_pointer... Args>
         constexpr bool clearInfoHistory(const Arg& _arg, const Args&... _args) noexcept {
             return clearInfoHistory(_arg) & clearInfoHistory(std::forward<const Args>(_args)...);
         }
@@ -182,12 +184,12 @@ namespace ubn {
 
     protected:
         constexpr void initInfoHistory(const char* _tag_name, const std::chrono::time_point<T>& _time_point) noexcept {
-            std::unordered_map<std::string, double> info;
+            std::unordered_map<std::string, Q> info;
             info.emplace("time_point_at", _time_point.time_since_epoch().count());
             for (const auto& key : { "id", "cur_duration", "min_duration", "max_duration", "avg_duration", "frequency" }) {
                 info.emplace(key, 0.);
             }
-            std::deque<std::unordered_map<std::string, double>> info_history { info };
+            std::deque<std::unordered_map<std::string, Q>> info_history { info };
             m_info_history_map.emplace(_tag_name, std::move(info_history));
         }
 
@@ -210,14 +212,14 @@ namespace ubn {
             info["id"] += 1.;
             info["time_point_at"] = m_time_point_map[_tag_name].time_since_epoch().count();
             info["cur_duration"] = duration_count;
-            info["frequency"] = 1. / std::chrono::duration<double, std::ratio<1l>>(_duration).count();
+            info["frequency"] = 1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
             while (m_info_history_map[_tag_name].size() >= m_info_history_size) {
                 m_info_history_map[_tag_name].pop_front();
             }
             m_info_history_map[_tag_name].push_back(std::move(info));
         }
 
-        constexpr void printInfo(const char* _tag_name, std::unordered_map<std::string, double>& _info_history) noexcept {
+        constexpr void printInfo(const char* _tag_name, std::unordered_map<std::string, Q>& _info_history) noexcept {
             std::cout << "["
                 << m_self_tag_name << "] Info '"
                 << _tag_name << "' -> "
@@ -289,17 +291,17 @@ namespace ubn {
         }
 
         struct ticket_guard {
-            constexpr ticket_guard(timer* const _timer) noexcept : m_timer(_timer) { m_timer->lock(); }
+            constexpr ticket_guard(const timer* const _timer) noexcept : m_timer(_timer) { m_timer->lock(); }
             constexpr ~ticket_guard() noexcept { m_timer->unlock(); }
-            timer* const m_timer { nullptr };
+            const timer* const m_timer;
         };
 
-        std::string const m_self_tag_name;
+        const char* const m_self_tag_name;
         std::size_t const m_info_history_size;
 
         std::map<std::string, std::chrono::time_point<T>> m_time_point_map;
         std::map<std::string, P> m_duration_map;
-        std::map<std::string, std::deque<std::unordered_map<std::string, double>>> m_info_history_map;
+        std::map<std::string, std::deque<std::unordered_map<std::string, Q>>> m_info_history_map;
 
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_in;
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_out;
