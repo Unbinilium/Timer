@@ -60,11 +60,18 @@ explicit timer(
 
 - Operator
 
+It easy to call `printAllInfoHistory()` to print all info history record(s) by performing overloads for `std::ostream` with `std::cout` to the timer object.
+
+```cpp
+friend std::ostream& operator<<(std::ostream& _os, const timer& _timer);
+```
+
 Update duration(s) by substract another timer, returns the reference of this timer.
 
 ```cpp
-auto& operator<<(const timer& _timer);
+timer& operator<<(const timer& _timer);
 ```
+
 
 - General
 
