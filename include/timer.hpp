@@ -44,7 +44,7 @@ namespace ubn {
             printAllInfoHistory();
         }
 
-        constexpr void operator<<(const timer& _timer) noexcept {
+        constexpr auto& operator<<(const timer& _timer) noexcept {
             const ticket_guard tg(this);
             for (const auto& [key, _] : m_time_point_map) {
                 updateInfoHistory(
@@ -52,6 +52,7 @@ namespace ubn {
                     std::chrono::duration_cast<P>(m_time_point_map.at(key) - _timer.getTimePoint(key.c_str()))
                 );
             }
+            return *this;
         }
 
         constexpr auto setTag(const char* _tag_name) noexcept {

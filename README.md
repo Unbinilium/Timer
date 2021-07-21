@@ -60,10 +60,10 @@ explicit timer(
 
 - Operator
 
-Update duration(s) by substract another timer.
+Update duration(s) by substract another timer, returns the reference of this timer.
 
 ```cpp
-void operator<<(const timer& _timer);
+auto& operator<<(const timer& _timer);
 ```
 
 - General
