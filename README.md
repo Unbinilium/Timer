@@ -63,7 +63,7 @@ explicit timer(
 Update duration(s) by substract another timer.
 
 ```cpp
-void operator-(timer& _timer);
+void operator<<(const timer& _timer);
 ```
 
 - General
