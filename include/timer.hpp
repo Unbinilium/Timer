@@ -202,6 +202,9 @@ namespace ubn {
         }
 
         constexpr void updateInfoHistory(const char* _tag_name, const P& _duration) noexcept {
+            while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) {
+                m_info_history_map.at(_tag_name).pop_front();
+            }
             const auto duration_count { _duration.count() };
             auto info { m_info_history_map.at(_tag_name).back() };
             if (std::get<long>(info.at("id")) == 0) {
@@ -231,12 +234,7 @@ namespace ubn {
             info.at("id") = std::get<long>(info.at("id")) + 1;
             info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
             info.at("cur_duration") = duration_count;
-            info.at("frequency") = static_cast<Q>(
-                1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count()
-            );
-            while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) {
-                m_info_history_map.at(_tag_name).pop_front();
-            }
+            info.at("frequency") = static_cast<Q>(1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count());
             m_info_history_map.at(_tag_name).push_back(std::move(info));
         }
 
