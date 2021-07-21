@@ -37,7 +37,7 @@ template <
 > class timer;
 ```
 
-`T` is used for specifing the clock type, `P` for specifying the time precision type and `Q` for specifying the time casting unit.
+`T` is used for specifing the clock type, `P` for specifying the time precision type and `Q` for specifying the time casting unit of (`avg_duration` and `frequency`).
 
 ## Member functions
 

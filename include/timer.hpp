@@ -7,10 +7,12 @@
 #include <deque>
 #include <iostream>
 #include <map>
+#include <ratio>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 
 namespace ubn {
     template <typename T>
@@ -115,7 +117,7 @@ namespace ubn {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
                 ? m_info_history_map.at(_tag_name).back()
-                : std::unordered_map<std::string, Q>();
+                : std::unordered_map<std::string, std::variant<long, Q>>();
         }
 
         constexpr void printInfo(const char* _tag_name) const noexcept {
@@ -140,7 +142,7 @@ namespace ubn {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
                 ? m_info_history_map.at(_tag_name)
-                : std::deque<std::unordered_map<std::string, Q>>();
+                : std::deque<std::unordered_map<std::string, std::variant<long, Q>>>();
         }
 
         constexpr void printInfoHistory(const char* _tag_name) const noexcept {
@@ -184,52 +186,56 @@ namespace ubn {
 
     protected:
         constexpr void initInfoHistory(const char* _tag_name, const std::chrono::time_point<T>& _time_point) noexcept {
-            std::unordered_map<std::string, Q> info;
+            std::unordered_map<std::string, std::variant<long, Q>> info;
             info.emplace("time_point_at", _time_point.time_since_epoch().count());
-            for (const auto& key : { "id", "cur_duration", "min_duration", "max_duration", "avg_duration", "frequency" }) {
-                info.emplace(key, 0.);
-            }
-            std::deque<std::unordered_map<std::string, Q>> info_history { info };
+            for (const auto& key : { "id", "cur_duration", "min_duration", "max_duration" }) { info.emplace(key, 0); }
+            for (const auto& key : { "avg_duration", "frequency" }) { info.emplace(key, static_cast<Q>(0)); }
+            std::deque<std::unordered_map<std::string, std::variant<long, Q>>> info_history { info };
             m_info_history_map.emplace(_tag_name, std::move(info_history));
         }
 
         constexpr void updateInfoHistory(const char* _tag_name, const P& _duration) noexcept {
             const auto duration_count { _duration.count() };
             auto info { m_info_history_map.at(_tag_name).back() };
-            if (static_cast<std::size_t>(info.at("id")) == 0) {
-                for (const auto& key : { "min_duration", "max_duration", "avg_duration" }) {
+            if (std::get<long>(info.at("id")) == 0) {
+                for (const auto& key : { "min_duration", "max_duration" }) {
                     info.at(key) = duration_count;
                 }
+                info.at("avg_duration") = static_cast<Q>(duration_count);
             } else {
-                if (info.at("min_duration") > duration_count) {
+                if (std::get<long>(info.at("min_duration")) > duration_count) {
                     info.at("min_duration") = duration_count;
                 }
-                if (info.at("max_duration") < duration_count) {
+                if (std::get<long>(info.at("max_duration")) < duration_count) {
                     info.at("max_duration") = duration_count;
                 }
-                info.at("avg_duration") = (info.at("avg_duration") + duration_count) / 2.;
+                info.at("avg_duration") = static_cast<Q>(
+                    (std::get<Q>(info.at("avg_duration")) + static_cast<Q>(duration_count)) / 2.
+                );
             }
-            info.at("id") += 1.;
+            info.at("id") = std::get<long>(info.at("id")) + 1;
             info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
             info.at("cur_duration") = duration_count;
-            info.at("frequency") = 1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
+            info.at("frequency") = static_cast<Q>(
+                1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count()
+            );
             while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) {
                 m_info_history_map.at(_tag_name).pop_front();
             }
             m_info_history_map.at(_tag_name).push_back(std::move(info));
         }
 
-        constexpr void printInfo(const char* _tag_name, const std::unordered_map<std::string, Q>& _info_history) const noexcept {
+        constexpr void printInfo(const char* _tag_name, const std::unordered_map<std::string, std::variant<long, Q>>& _info_history) const noexcept {
             std::cout << "["
                 << m_self_tag_name << "] Info '"
                 << _tag_name << "' -> "
-                << static_cast<std::size_t>(_info_history.at("id")) << " set at: "
-                << static_cast<std::size_t>(_info_history.at("time_point_at")) << " duration (cur/min/max/avg): "
-                << _info_history.at("cur_duration") << "/"
-                << _info_history.at("min_duration") << "/"
-                << _info_history.at("max_duration") << "/"
-                << _info_history.at("avg_duration") << ", frequency: "
-                << _info_history.at("frequency") << std::endl;
+                << std::get<long>(_info_history.at("id")) << " set at: "
+                << std::get<long>(_info_history.at("time_point_at")) << " duration (cur/min/max/avg): "
+                << std::get<long>(_info_history.at("cur_duration")) << "/"
+                << std::get<long>(_info_history.at("min_duration")) << "/"
+                << std::get<long>(_info_history.at("max_duration")) << "/"
+                << std::get<Q>(_info_history.at("avg_duration")) << ", frequency: "
+                << std::get<Q>(_info_history.at("frequency")) << std::endl;
         }
 
         constexpr void printAllInfo(const std::map<std::string, P>& _duration_map) const noexcept {
@@ -301,7 +307,7 @@ namespace ubn {
 
         std::map<std::string, std::chrono::time_point<T>> m_time_point_map;
         std::map<std::string, P> m_duration_map;
-        std::map<std::string, std::deque<std::unordered_map<std::string, Q>>> m_info_history_map;
+        std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>> m_info_history_map;
 
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_in;
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_out;
