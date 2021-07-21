@@ -60,7 +60,7 @@ namespace ubn {
                     std::chrono::duration_cast<P>(time_point - m_time_point_map.at(_tag_name))
                 };
                 m_duration_map.insert_or_assign(_tag_name, duration);
-                m_time_point_map[_tag_name] = time_point;
+                m_time_point_map.at(_tag_name) = time_point;
                 updateInfoHistory(_tag_name, std::move(duration));
             } else {
                 m_time_point_map.emplace(_tag_name, time_point);
@@ -198,21 +198,21 @@ namespace ubn {
             auto info { m_info_history_map.at(_tag_name).back() };
             if (static_cast<std::size_t>(info.at("id")) == 0) {
                 for (const auto& key : { "min_duration", "max_duration", "avg_duration" }) {
-                    info[key] = duration_count;
+                    info.at(key) = duration_count;
                 }
             } else {
                 if (info.at("min_duration") > duration_count) {
-                    info["min_duration"] = duration_count;
+                    info.at("min_duration") = duration_count;
                 }
                 if (info.at("max_duration") < duration_count) {
-                    info["max_duration"] = duration_count;
+                    info.at("max_duration") = duration_count;
                 }
-                info["avg_duration"] = (info.at("avg_duration") + duration_count) / 2.;
+                info.at("avg_duration") = (info.at("avg_duration") + duration_count) / 2.;
             }
-            info["id"] += 1.;
-            info["time_point_at"] = m_time_point_map.at(_tag_name).time_since_epoch().count();
-            info["cur_duration"] = duration_count;
-            info["frequency"] = 1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
+            info.at("id") += 1.;
+            info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
+            info.at("cur_duration") = duration_count;
+            info.at("frequency") = 1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
             while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) {
                 m_info_history_map.at(_tag_name).pop_front();
             }
