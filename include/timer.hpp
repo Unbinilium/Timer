@@ -42,12 +42,12 @@ namespace ubn {
             printAllInfoHistory();
         }
 
-        constexpr void operator-(timer& _timer) noexcept {
+        constexpr void operator<<(const timer& _timer) noexcept {
             const ticket_guard tg(this);
             for (const auto& [key, _] : m_time_point_map) {
                 updateInfoHistory(
                     key.c_str(),
-                    std::chrono::duration_cast<P>(m_time_point_map[key] - _timer.getTimePoint(key.c_str()))
+                    std::chrono::duration_cast<P>(m_time_point_map.at(key) - _timer.getTimePoint(key.c_str()))
                 );
             }
         }
@@ -57,7 +57,7 @@ namespace ubn {
             const ticket_guard tg(this);
             if (m_time_point_map.contains(_tag_name)) {
                 const auto duration {
-                    std::chrono::duration_cast<P>(time_point - m_time_point_map[_tag_name])
+                    std::chrono::duration_cast<P>(time_point - m_time_point_map.at(_tag_name))
                 };
                 m_duration_map.insert_or_assign(_tag_name, duration);
                 m_time_point_map[_tag_name] = time_point;
@@ -75,14 +75,14 @@ namespace ubn {
             return setTag(std::forward<const Args>(_args)...);
         }
 
-        constexpr auto getTimePoint(const char* _tag_name) noexcept {
+        constexpr auto getTimePoint(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
             return m_time_point_map.contains(_tag_name)
-                ? m_time_point_map[_tag_name]
+                ? m_time_point_map.at(_tag_name)
                 : T::now();
         }
 
-        constexpr auto getAllTimePoint() noexcept {
+        constexpr auto getAllTimePoint() const noexcept {
             const ticket_guard tg(this);
             return m_time_point_map;
         }
@@ -99,66 +99,66 @@ namespace ubn {
             return eraseTag(_arg) & eraseTag(std::forward<const Args>(_args)...);
         }
 
-        constexpr auto getDuration(const char* _tag_name) noexcept {
+        constexpr auto getDuration(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
             return m_duration_map.contains(_tag_name)
-                ? m_duration_map[_tag_name]
+                ? m_duration_map.at(_tag_name)
                 : P();
         }
 
-        constexpr auto getAllDuration() noexcept {
+        constexpr auto getAllDuration() const noexcept {
             const ticket_guard tg(this);
             return m_duration_map;
         }
 
-        constexpr auto getInfo(const char* _tag_name) noexcept {
+        constexpr auto getInfo(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
-                ? m_info_history_map[_tag_name].back()
+                ? m_info_history_map.at(_tag_name).back()
                 : std::unordered_map<std::string, Q>();
         }
 
-        constexpr void printInfo(const char* _tag_name) noexcept {
+        constexpr void printInfo(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
             if (m_info_history_map.contains(_tag_name)) {
-                printInfo(_tag_name, m_info_history_map[_tag_name].back());
+                printInfo(_tag_name, m_info_history_map.at(_tag_name).back());
             }
         }
 
         template <const_char_pointer Arg, const_char_pointer... Args>
-        constexpr void printInfo(const Arg& _arg, const Args&... _args) noexcept {
+        constexpr void printInfo(const Arg& _arg, const Args&... _args) const noexcept {
             printInfo(_arg);
             printInfo(std::forward<const Args>(_args)...);
         }
 
-        constexpr void printAllInfo() noexcept {
+        constexpr void printAllInfo() const noexcept {
             const ticket_guard tg(this);
             printAllInfo(m_duration_map);
         }
 
-        constexpr auto getInfoHistory(const char* _tag_name) noexcept {
+        constexpr auto getInfoHistory(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
-                ? m_info_history_map[_tag_name]
+                ? m_info_history_map.at(_tag_name)
                 : std::deque<std::unordered_map<std::string, Q>>();
         }
 
-        constexpr void printInfoHistory(const char* _tag_name) noexcept {
+        constexpr void printInfoHistory(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
             if (m_info_history_map.contains(_tag_name)) {
-                for (auto& info_history : m_info_history_map[_tag_name]) {
+                for (const auto& info_history : m_info_history_map.at(_tag_name)) {
                     printInfo(_tag_name, info_history);
                 }
             }
         }
 
         template <const_char_pointer Arg, const_char_pointer... Args>
-        constexpr void printInfoHistory(const Arg& _arg, const Args&... _args) noexcept {
+        constexpr void printInfoHistory(const Arg& _arg, const Args&... _args) const noexcept {
             printInfoHistory(_arg);
             printInfoHistory(std::forward<const Args>(_args)...);
         }
 
-        constexpr void printAllInfoHistory() noexcept {
+        constexpr void printAllInfoHistory() const noexcept {
             const ticket_guard tg(this);
             printAllInfoHistory(m_duration_map);
         }
@@ -195,54 +195,54 @@ namespace ubn {
 
         constexpr void updateInfoHistory(const char* _tag_name, const P& _duration) noexcept {
             const auto duration_count { _duration.count() };
-            auto info { m_info_history_map[_tag_name].back() };
-            if (static_cast<std::size_t>(info["id"]) == 0) {
+            auto info { m_info_history_map.at(_tag_name).back() };
+            if (static_cast<std::size_t>(info.at("id")) == 0) {
                 for (const auto& key : { "min_duration", "max_duration", "avg_duration" }) {
                     info[key] = duration_count;
                 }
             } else {
-                if (info["min_duration"] > duration_count) {
+                if (info.at("min_duration") > duration_count) {
                     info["min_duration"] = duration_count;
                 }
-                if (info["max_duration"] < duration_count) {
+                if (info.at("max_duration") < duration_count) {
                     info["max_duration"] = duration_count;
                 }
-                info["avg_duration"] = (info["avg_duration"] + duration_count) / 2.;
+                info["avg_duration"] = (info.at("avg_duration") + duration_count) / 2.;
             }
             info["id"] += 1.;
-            info["time_point_at"] = m_time_point_map[_tag_name].time_since_epoch().count();
+            info["time_point_at"] = m_time_point_map.at(_tag_name).time_since_epoch().count();
             info["cur_duration"] = duration_count;
             info["frequency"] = 1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
-            while (m_info_history_map[_tag_name].size() >= m_info_history_size) {
-                m_info_history_map[_tag_name].pop_front();
+            while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) {
+                m_info_history_map.at(_tag_name).pop_front();
             }
-            m_info_history_map[_tag_name].push_back(std::move(info));
+            m_info_history_map.at(_tag_name).push_back(std::move(info));
         }
 
-        constexpr void printInfo(const char* _tag_name, std::unordered_map<std::string, Q>& _info_history) noexcept {
+        constexpr void printInfo(const char* _tag_name, const std::unordered_map<std::string, Q>& _info_history) const noexcept {
             std::cout << "["
                 << m_self_tag_name << "] Info '"
                 << _tag_name << "' -> "
-                << static_cast<std::size_t>(_info_history["id"]) << " set at: "
-                << static_cast<std::size_t>(_info_history["time_point_at"]) << " duration (cur/min/max/avg): "
-                << _info_history["cur_duration"] << "/"
-                << _info_history["min_duration"] << "/"
-                << _info_history["max_duration"] << "/"
-                << _info_history["avg_duration"] << ", frequency: "
-                << _info_history["frequency"] << std::endl;
+                << static_cast<std::size_t>(_info_history.at("id")) << " set at: "
+                << static_cast<std::size_t>(_info_history.at("time_point_at")) << " duration (cur/min/max/avg): "
+                << _info_history.at("cur_duration") << "/"
+                << _info_history.at("min_duration") << "/"
+                << _info_history.at("max_duration") << "/"
+                << _info_history.at("avg_duration") << ", frequency: "
+                << _info_history.at("frequency") << std::endl;
         }
 
-        constexpr void printAllInfo(const std::map<std::string, P>& _duration_map) noexcept {
+        constexpr void printAllInfo(const std::map<std::string, P>& _duration_map) const noexcept {
             for (const auto& [key, _] : _duration_map) {
                 if (m_info_history_map.contains(key)) {
-                    printInfo(key.c_str(), m_info_history_map[key].back());
+                    printInfo(key.c_str(), m_info_history_map.at(key).back());
                 }
             }
         }
 
-        constexpr void printAllInfoHistory(const std::map<std::string, P>& _duration_map) noexcept {
+        constexpr void printAllInfoHistory(const std::map<std::string, P>& _duration_map) const noexcept {
             for (const auto& [key, _] : _duration_map) {
-                for (auto& info_history : m_info_history_map[key]) {
+                for (const auto& info_history : m_info_history_map.at(key)) {
                     printInfo(key.c_str(), info_history);
                 }
             }
