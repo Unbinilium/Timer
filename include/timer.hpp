@@ -219,17 +219,20 @@ namespace ubn {
                 if (std::get<long>(info.at("max_duration")) < duration_count) {
                     info.at("max_duration") = duration_count;
                 }
-                info.at("avg_duration") =
-                    static_cast<Q>(
-                        std::accumulate(
-                            m_info_history_map.at(_tag_name).begin(),
-                            m_info_history_map.at(_tag_name).end(),
-                            0l,
-                            [](const long& _value, const auto& _info) {
-                                return _value + std::get<long>(_info.at("cur_duration"));
-                            }
-                        ) + duration_count
-                    ) / static_cast<Q>(m_info_history_map.at(_tag_name).size() + 1);
+                info.at("avg_duration") = static_cast<Q>(
+                    std::accumulate(
+                        m_info_history_map.at(_tag_name).begin(),
+                        m_info_history_map.at(_tag_name).end(),
+                        0l,
+                        [](const long& _value, const auto& _info) {
+                            return _value + std::get<long>(_info.at("cur_duration"));
+                        }
+                    ) + duration_count
+                ) / static_cast<Q>(
+                    std::get<long>(info.at("id")) <= static_cast<long>(m_info_history_size - 2)
+                        ? m_info_history_map.at(_tag_name).size()
+                        : m_info_history_size
+                );
             }
             info.at("id") = std::get<long>(info.at("id")) + 1;
             info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
