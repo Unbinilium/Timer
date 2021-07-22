@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <cstring>
 #include <deque>
+#include <execution>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -39,9 +41,7 @@ namespace ubn {
         ) noexcept : m_time_point_map(_time_point_map), m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) {}
 
         constexpr ~timer() noexcept {
-            if (std::strlen(m_self_tag_name) != 0) {
-                setTag(m_self_tag_name);
-            }
+            if (std::strlen(m_self_tag_name) != 0) { setTag(m_self_tag_name); }
             printAllInfoHistory();
         }
 
@@ -52,12 +52,18 @@ namespace ubn {
 
         constexpr timer& operator<<(const timer& _timer) noexcept {
             const ticket_guard tg(this);
-            for (const auto& [key, _] : m_time_point_map) {
-                updateInfoHistory(
-                    key.c_str(),
-                    std::chrono::duration_cast<P>(m_time_point_map.at(key) - _timer.getTimePoint(key.c_str()))
-                );
-            }
+            std::for_each(
+                std::execution::par_unseq,
+                m_time_point_map.begin(),
+                m_time_point_map.end(),
+                [_this = this, __timer = &_timer](const auto& _pair) {
+                    const auto key { _pair.first.c_str() };
+                    _this->updateInfoHistory(
+                        key,
+                        std::chrono::duration_cast<P>(_this->m_time_point_map.at(key) - __timer->getTimePoint(key))
+                    );
+                }
+            );
             return *this;
         }
 
@@ -220,13 +226,13 @@ namespace ubn {
                     info.at("max_duration") = duration_count;
                 }
                 info.at("avg_duration") = static_cast<Q>(
-                    std::accumulate(
+                    std::transform_reduce(
+                        std::execution::par_unseq,
                         m_info_history_map.at(_tag_name).begin(),
                         m_info_history_map.at(_tag_name).end(),
-                        0l,
-                        [](const long& _value, const auto& _info) {
-                            return _value + std::get<long>(_info.at("cur_duration"));
-                        }
+                        long { 0 },
+                        [](const long& _lfs, const long& _rhs) { return _lfs + _rhs; },
+                        [](const std::unordered_map<std::string, std::variant<long, Q>>& _info) { return std::get<long>(_info.at("cur_duration")); }
                     ) + duration_count
                 ) / static_cast<Q>(
                     std::get<long>(info.at("id")) <= static_cast<long>(m_info_history_size - 2)
