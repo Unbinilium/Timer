@@ -67,6 +67,10 @@ namespace ubn {
             return *this;
         }
 
+        constexpr auto operator[](const char* _tag_name) const noexcept {
+            return getInfo(_tag_name);
+        }
+
         constexpr auto setTag(const char* _tag_name) noexcept {
             const auto time_point { T::now() };
             const ticket_guard tg(this);
@@ -214,9 +218,7 @@ namespace ubn {
             const auto duration_count { _duration.count() };
             auto info { m_info_history_map.at(_tag_name).back() };
             if (std::get<long>(info.at("id")) == 0) {
-                for (const auto& key : { "min_duration", "max_duration" }) {
-                    info.at(key) = duration_count;
-                }
+                for (const auto& key : { "min_duration", "max_duration" }) { info.at(key) = duration_count; }
                 info.at("avg_duration") = static_cast<Q>(duration_count);
             } else {
                 if (std::get<long>(info.at("min_duration")) > duration_count) {
@@ -243,7 +245,7 @@ namespace ubn {
             info.at("id") = std::get<long>(info.at("id")) + 1;
             info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
             info.at("cur_duration") = duration_count;
-            info.at("frequency") = static_cast<Q>(1. / std::chrono::duration<Q, std::ratio<1l>>(_duration).count());
+            info.at("frequency") = static_cast<Q>(1) / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
             m_info_history_map.at(_tag_name).push_back(std::move(info));
         }
 
@@ -280,27 +282,21 @@ namespace ubn {
             if (m_time_point_map.contains(_tag_name)) {
                 m_time_point_map.erase(_tag_name);
                 return true;
-            } else {
-                return false;
-            }
+            } else { return false; }
         }
 
         constexpr bool eraseDuration(const char* _tag_name) noexcept {
             if (m_duration_map.contains(_tag_name)) {
                 m_duration_map.erase(_tag_name);
                 return true;
-            } else {
-                return false;
-            }
+            } else { return false; }
         }
 
         constexpr bool eraseInfoHistory(const char* _tag_name) noexcept {
             if (m_info_history_map.contains(_tag_name)) {
                 m_info_history_map.erase(_tag_name);
                 return true;
-            } else {
-                return false;
-            }
+            } else { return false; }
         }
 
     private:
