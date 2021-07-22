@@ -37,7 +37,32 @@ template <
 > class timer;
 ```
 
-`T` is used for specifing the clock type, `P` for specifying the time precision type and `Q` for specifying the time casting unit of (`avg_duration` and `frequency`).
+`T` is used for specifing the clock type, `P` for specifying the time precision type and `Q` for specifying the time casting unit of (`avg_duration` and `frequency`). The basic data structure of timer are listed as follows:
+
+```cpp
+std::map<
+    std::string,
+    std::chrono::time_point<T>
+> m_time_point_map;
+
+std::map<
+    std::string,
+    P
+> m_duration_map;
+
+std::map<
+    std::string,
+    std::deque<std::unordered_map<std::string, std::variant<long, Q>>>
+> m_info_history_map;
+```
+
+All the availiable keys of info history map:
+
+| Type   | Key                                                  |
+| ------ | ---------------------------------------------------- |
+| `long` | `id`, `cur_duration`, `min_duration`, `max_duration` |
+| `Q`    | `avg_duration`, `frequency`                          |
+
 
 ## Member functions
 
@@ -70,6 +95,11 @@ Update duration(s) by substract another timer, returns the reference of this tim
 
 ```cpp
 timer& operator<<(const timer& _timer);
+```
+
+Use operator `[]` to get the last updated info history record by tag name, alternative to call function `getInfo()` with a single parameter directly.
+```cpp
+auto operator[](const char* _tag_name);
 ```
 
 
