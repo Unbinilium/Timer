@@ -181,7 +181,7 @@ namespace ubn {
             m_info_history_map.at(_tag_name).push_back(std::move(info));
         }
 
-        constexpr auto setTag(const char* _tag_name, const std::chrono::time_point<T>& _time_point) noexcept {
+        constexpr void setTag(const char* _tag_name, const std::chrono::time_point<T>& _time_point) noexcept {
             if (m_time_point_map.contains(_tag_name)) {
                 const auto duration { std::chrono::duration_cast<P>(_time_point - m_time_point_map.at(_tag_name)) };
                 m_time_point_map.at(_tag_name) = _time_point;
@@ -190,7 +190,6 @@ namespace ubn {
                 m_time_point_map.emplace(_tag_name, _time_point);
                 initInfoHistory(_tag_name, _time_point);
             }
-            return _time_point;
         }
 
         constexpr bool printInfo(const char* _tag_name, const std::unordered_map<std::string, std::variant<long, Q>>& _info_history) const noexcept {
