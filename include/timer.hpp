@@ -116,8 +116,10 @@ namespace ubn {
         constexpr void printInfoHistory(const Args&... _args) const noexcept {
             const ticket_guard tg(this);
             ([_this = this, __args = &_args] constexpr {
-                for (const auto& info_history : _this->m_info_history_map.at(*__args)) {
-                    _this->printInfo(*__args, info_history);
+                if (_this->m_info_history_map.contains(*__args)) {
+                    for (const auto& info_history : _this->m_info_history_map.at(*__args)) {
+                        _this->printInfo(*__args, info_history);
+                    }
                 }
             }(), ...);
         }
