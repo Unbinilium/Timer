@@ -153,21 +153,15 @@ namespace ubn {
         }
 
         constexpr void updateInfoHistory(const char* _tag_name, const P& _duration) noexcept {
-            while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) {
-                m_info_history_map.at(_tag_name).pop_front();
-            }
+            while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) { m_info_history_map.at(_tag_name).pop_front(); }
             const auto duration_count { _duration.count() };
             auto info { m_info_history_map.at(_tag_name).back() };
             if (std::get<long>(info.at("id")) == 0) {
                 for (const auto& key : { "min_duration", "max_duration" }) { info.at(key) = duration_count; }
                 info.at("avg_duration") = static_cast<Q>(duration_count);
             } else {
-                if (std::get<long>(info.at("min_duration")) > duration_count) {
-                    info.at("min_duration") = duration_count;
-                }
-                if (std::get<long>(info.at("max_duration")) < duration_count) {
-                    info.at("max_duration") = duration_count;
-                }
+                if (std::get<long>(info.at("min_duration")) > duration_count) { info.at("min_duration") = duration_count; }
+                if (std::get<long>(info.at("max_duration")) < duration_count) { info.at("max_duration") = duration_count; }
                 info.at("avg_duration") = static_cast<Q>(
                     std::transform_reduce(std::execution::par_unseq, m_info_history_map.at(_tag_name).begin(), m_info_history_map.at(_tag_name).end(),
                         long { 0 },
@@ -189,9 +183,7 @@ namespace ubn {
 
         constexpr auto setTag(const char* _tag_name, const std::chrono::time_point<T>& _time_point) noexcept {
             if (m_time_point_map.contains(_tag_name)) {
-                const auto duration {
-                    std::chrono::duration_cast<P>(_time_point - m_time_point_map.at(_tag_name))
-                };
+                const auto duration { std::chrono::duration_cast<P>(_time_point - m_time_point_map.at(_tag_name)) };
                 m_time_point_map.at(_tag_name) = _time_point;
                 updateInfoHistory(_tag_name, duration);
             } else {
