@@ -68,9 +68,18 @@ namespace ubn {
 
         template <const_char_pointer... Args>
         constexpr auto setTag(const Args&... _args) noexcept {
-            const auto time_point { T::now() };
             const ticket_guard tg(this);
-            (setTag(_args, time_point), ...);
+            const auto time_point { T::now() };
+            ([_this = this, _time_point = &time_point, __args = _args]() constexpr {
+                if (_this->m_time_point_map.contains(__args)) {
+                    const auto duration { std::chrono::duration_cast<P>(*_time_point - _this->m_time_point_map.at(__args)) };
+                    _this->m_time_point_map.at(__args) = *_time_point;
+                    _this->updateInfoHistory(__args, std::move(duration));
+                } else {
+                    _this->m_time_point_map.emplace(__args, *_time_point);
+                    _this->initInfoHistory(__args, *_time_point);
+                }
+            }(), ...);
             return time_point;
         }
 
@@ -115,10 +124,10 @@ namespace ubn {
         template <const_char_pointer... Args>
         constexpr void printInfoHistory(const Args&... _args) const noexcept {
             const ticket_guard tg(this);
-            ([_this = this, __args = &_args]() constexpr {
-                if (_this->m_info_history_map.contains(*__args)) {
-                    for (const auto& info_history : _this->m_info_history_map.at(*__args)) {
-                        _this->printInfo(*__args, info_history);
+            ([_this = this, __args = _args]() constexpr {
+                if (_this->m_info_history_map.contains(__args)) {
+                    for (const auto& info_history : _this->m_info_history_map.at(__args)) {
+                        _this->printInfo(__args, info_history);
                     }
                 }
             }(), ...);
@@ -179,17 +188,6 @@ namespace ubn {
             info.at("cur_duration") = duration_count;
             info.at("frequency") = static_cast<Q>(1) / std::chrono::duration<Q, std::ratio<1l>>(_duration).count();
             m_info_history_map.at(_tag_name).push_back(std::move(info));
-        }
-
-        constexpr void setTag(const char* _tag_name, const std::chrono::time_point<T>& _time_point) noexcept {
-            if (m_time_point_map.contains(_tag_name)) {
-                const auto duration { std::chrono::duration_cast<P>(_time_point - m_time_point_map.at(_tag_name)) };
-                m_time_point_map.at(_tag_name) = _time_point;
-                updateInfoHistory(_tag_name, duration);
-            } else {
-                m_time_point_map.emplace(_tag_name, _time_point);
-                initInfoHistory(_tag_name, _time_point);
-            }
         }
 
         constexpr bool printInfo(const char* _tag_name, const std::unordered_map<std::string, std::variant<long, Q>>& _info_history) const noexcept {
