@@ -144,7 +144,7 @@ namespace ubn {
             }
         }
 
-        template <const_char_pointer Arg, const_char_pointer... Args>
+        template <const_char_pointer... Args>
         constexpr bool clearInfoHistory(const Args&... _args) noexcept {
             const auto time_point { T::now() };
             const ticket_guard tg(this);
