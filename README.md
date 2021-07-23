@@ -47,11 +47,6 @@ std::map<
 
 std::map<
     std::string,
-    P
-> m_duration_map;
-
-std::map<
-    std::string,
     std::deque<std::unordered_map<std::string, std::variant<long, Q>>>
 > m_info_history_map;
 ```
@@ -107,19 +102,17 @@ auto operator[](const char* _tag_name);
 
 | Function name                            | Design purpose                                               |
 | :--------------------------------------- | :----------------------------------------------------------- |
-| `auto setTag(const char* ...)`           | If the tag(s) was not set, then set new tag(s) and initialize duration, else update the tag(s) time and update duration, returns time point |
+| `auto setTag(const char* ...)`           | Set tag(s) by tag name(s), set new tag(s) and initialize info history, else update the tag's time point and update info history, returns time point |
+| `bool eraseTag(const char* ...)`         | Erase tag(s) by tag name(s), returns `false` returns `false` if has at least one tag name is not found, otherwise is `true` |
 | `auto getTimePoint(const char*)`         | Get time point by tag name                                   |
-| `auto getAllTimePoint()`                 | Get all time point(s), returns time point map                |
-| `bool eraseTag(const char* ...)`         | Erase tag(s) by tag name(s), returns `false` if some tag names not found, otherwise is `true` |
-| `auto getDuration(const char*)`          | Get duration by tag name                                     |
-| `auto getAllDuration()`                  | Get all duration(s), returns duration map                    |
 | `auto getInfo(const char*)`              | Get tag info by tag name, returns an unordered map that includes the last updated info |
 | `void printInfo(const char* ...)`        | Print last updated info by tag name(s)                       |
+| `void printAllInfo()`                    | Print all last updated info for all tag(s)                   |
 | `auto getInfoHistory(const char*)`       | Get tag info history by tag name, returns a deque that includes all the info history of this tag |
 | `void printInfoHistory(const char* ...)` | Print tag info history recored(s) by tag name(s), the default size of info history records is `5` |
 | `void printAllInfoHistory()`             | Print all info history record(s) for all tag(s)              |
-| `bool clearInfoHistory(const char* ...)` | Clear tag(s) info history record(s) by tag name(s), returns `false` if some tag names not found, otherwise is `true` |
-| `void clear()`                           | Clear time point map, duration map and info history map      |
+| `bool clearInfoHistory(const char* ...)` | Clear tag(s) info history record(s) by tag name(s), returns `false` if has at least one tag name is not found, otherwise is `true` |
+| `void clear()`                           | Clear time point map and info history map                    |
 
 ## License
 

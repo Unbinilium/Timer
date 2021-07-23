@@ -52,10 +52,7 @@ namespace ubn {
 
         constexpr timer& operator<<(const timer& _timer) noexcept {
             const ticket_guard tg(this);
-            std::for_each(
-                std::execution::par_unseq,
-                m_time_point_map.begin(),
-                m_time_point_map.end(),
+            std::for_each(std::execution::par_unseq, m_time_point_map.begin(), m_time_point_map.end(),
                 [_this = this, __timer = &_timer](const auto& _pair) {
                     const auto key { _pair.first.c_str() };
                     _this->updateInfoHistory(
@@ -71,46 +68,31 @@ namespace ubn {
             return getInfo(_tag_name);
         }
 
-        constexpr auto setTag(const char* _tag_name) noexcept {
-            const auto time_point { T::now() };
+        constexpr auto setTag(const char* _tag_name, const std::chrono::time_point<T>& _time_point = T::now()) noexcept {
             const ticket_guard tg(this);
             if (m_time_point_map.contains(_tag_name)) {
                 const auto duration {
-                    std::chrono::duration_cast<P>(time_point - m_time_point_map.at(_tag_name))
+                    std::chrono::duration_cast<P>(_time_point - m_time_point_map.at(_tag_name))
                 };
-                m_duration_map.insert_or_assign(_tag_name, duration);
-                m_time_point_map.at(_tag_name) = time_point;
-                updateInfoHistory(_tag_name, std::move(duration));
+                m_time_point_map.at(_tag_name) = _time_point;
+                updateInfoHistory(_tag_name, duration);
             } else {
-                m_time_point_map.emplace(_tag_name, time_point);
-                initInfoHistory(_tag_name, time_point);
+                m_time_point_map.emplace(_tag_name, _time_point);
+                initInfoHistory(_tag_name, _time_point);
             }
+            return _time_point;
+        }
+
+        template <const_char_pointer... Args>
+        constexpr auto setTag(const Args&... _args) noexcept {
+            const auto time_point { T::now() };
+            (setTag(_args, time_point), ...);
             return time_point;
-        }
-
-        template <const_char_pointer Arg, const_char_pointer... Args>
-        constexpr auto setTag(const Arg& _arg, const Args&... _args) noexcept {
-            setTag(_arg);
-            return setTag(std::forward<const Args>(_args)...);
-        }
-
-        constexpr auto getTimePoint(const char* _tag_name) const noexcept {
-            const ticket_guard tg(this);
-            return m_time_point_map.contains(_tag_name)
-                ? m_time_point_map.at(_tag_name)
-                : T::now();
-        }
-
-        constexpr auto getAllTimePoint() const noexcept {
-            const ticket_guard tg(this);
-            return m_time_point_map;
         }
 
         constexpr bool eraseTag(const char* _tag_name) noexcept {
             const ticket_guard tg(this);
-            return eraseTimePoint(_tag_name) &&
-                eraseDuration(_tag_name) &&
-                eraseInfoHistory(_tag_name);
+            return eraseTimePoint(_tag_name) && eraseInfoHistory(_tag_name);
         }
 
         template <const_char_pointer Arg, const_char_pointer... Args>
@@ -118,16 +100,11 @@ namespace ubn {
             return eraseTag(_arg) & eraseTag(std::forward<const Args>(_args)...);
         }
 
-        constexpr auto getDuration(const char* _tag_name) const noexcept {
+        constexpr auto getTimePoint(const char* _tag_name) const noexcept {
             const ticket_guard tg(this);
-            return m_duration_map.contains(_tag_name)
-                ? m_duration_map.at(_tag_name)
-                : P();
-        }
-
-        constexpr auto getAllDuration() const noexcept {
-            const ticket_guard tg(this);
-            return m_duration_map;
+            return m_time_point_map.contains(_tag_name)
+                ? m_time_point_map.at(_tag_name)
+                : T::now();
         }
 
         constexpr auto getInfo(const char* _tag_name) const noexcept {
@@ -144,15 +121,14 @@ namespace ubn {
             }
         }
 
-        template <const_char_pointer Arg, const_char_pointer... Args>
-        constexpr void printInfo(const Arg& _arg, const Args&... _args) const noexcept {
-            printInfo(_arg);
-            printInfo(std::forward<const Args>(_args)...);
+        template <const_char_pointer... Args>
+        constexpr void printInfo(const Args&... _args) const noexcept {
+            (printInfo(_args), ...);
         }
 
         constexpr void printAllInfo() const noexcept {
             const ticket_guard tg(this);
-            printAllInfo(m_duration_map);
+            printAllInfo(m_info_history_map);
         }
 
         constexpr auto getInfoHistory(const char* _tag_name) const noexcept {
@@ -171,15 +147,14 @@ namespace ubn {
             }
         }
 
-        template <const_char_pointer Arg, const_char_pointer... Args>
-        constexpr void printInfoHistory(const Arg& _arg, const Args&... _args) const noexcept {
-            printInfoHistory(_arg);
-            printInfoHistory(std::forward<const Args>(_args)...);
+        template <const_char_pointer... Args>
+        constexpr void printInfoHistory(const Args&... _args) const noexcept {
+            (printInfoHistory(_args), ...);
         }
 
         constexpr void printAllInfoHistory() const noexcept {
             const ticket_guard tg(this);
-            printAllInfoHistory(m_duration_map);
+            printAllInfoHistory(m_info_history_map);
         }
 
         constexpr bool clearInfoHistory(const char* _tag_name) noexcept {
@@ -197,7 +172,6 @@ namespace ubn {
         constexpr void clear() noexcept {
             const ticket_guard tg(this);
             m_time_point_map.clear();
-            m_duration_map.clear();
             m_info_history_map.clear();
         }
 
@@ -228,10 +202,7 @@ namespace ubn {
                     info.at("max_duration") = duration_count;
                 }
                 info.at("avg_duration") = static_cast<Q>(
-                    std::transform_reduce(
-                        std::execution::par_unseq,
-                        m_info_history_map.at(_tag_name).begin(),
-                        m_info_history_map.at(_tag_name).end(),
+                    std::transform_reduce(std::execution::par_unseq, m_info_history_map.at(_tag_name).begin(), m_info_history_map.at(_tag_name).end(),
                         long { 0 },
                         [](const long& _lfs, const long& _rhs) { return _lfs + _rhs; },
                         [](const std::unordered_map<std::string, std::variant<long, Q>>& _info) { return std::get<long>(_info.at("cur_duration")); }
@@ -262,16 +233,14 @@ namespace ubn {
                 << std::get<Q>(_info_history.at("frequency")) << std::endl;
         }
 
-        constexpr void printAllInfo(const std::map<std::string, P>& _duration_map) const noexcept {
-            for (const auto& [key, _] : _duration_map) {
-                if (m_info_history_map.contains(key)) {
-                    printInfo(key.c_str(), m_info_history_map.at(key).back());
-                }
+        constexpr void printAllInfo(const std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>>& _info_history_map) const noexcept {
+            for (const auto& [key, _] : _info_history_map) {
+                printInfo(key.c_str(), m_info_history_map.at(key).back());
             }
         }
 
-        constexpr void printAllInfoHistory(const std::map<std::string, P>& _duration_map) const noexcept {
-            for (const auto& [key, _] : _duration_map) {
+        constexpr void printAllInfoHistory(const std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>>& _info_history_map) const noexcept {
+            for (const auto& [key, _] : _info_history_map) {
                 for (const auto& info_history : m_info_history_map.at(key)) {
                     printInfo(key.c_str(), info_history);
                 }
@@ -281,13 +250,6 @@ namespace ubn {
         constexpr bool eraseTimePoint(const char* _tag_name) noexcept {
             if (m_time_point_map.contains(_tag_name)) {
                 m_time_point_map.erase(_tag_name);
-                return true;
-            } else { return false; }
-        }
-
-        constexpr bool eraseDuration(const char* _tag_name) noexcept {
-            if (m_duration_map.contains(_tag_name)) {
-                m_duration_map.erase(_tag_name);
                 return true;
             } else { return false; }
         }
@@ -324,7 +286,6 @@ namespace ubn {
         std::size_t const m_info_history_size;
 
         std::map<std::string, std::chrono::time_point<T>> m_time_point_map;
-        std::map<std::string, P> m_duration_map;
         std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>> m_info_history_map;
 
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_in;
