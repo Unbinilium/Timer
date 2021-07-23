@@ -111,7 +111,9 @@ namespace ubn {
 
         constexpr void printAllInfo() const noexcept {
             const ticket_guard tg(this);
-            printAllInfo(m_info_history_map);
+            for (const auto& [key, _] : m_info_history_map) {
+                printInfo(key.c_str(), m_info_history_map.at(key).back());
+            }
         }
 
         constexpr auto getInfoHistory(const char* _tag_name) const noexcept {
@@ -135,7 +137,11 @@ namespace ubn {
 
         constexpr void printAllInfoHistory() const noexcept {
             const ticket_guard tg(this);
-            printAllInfoHistory(m_info_history_map);
+            for (const auto& [key, _] : m_info_history_map) {
+                for (const auto& info_history : m_info_history_map.at(key)) {
+                    printInfo(key.c_str(), info_history);
+                }
+            }
         }
 
         template <const_char_pointer Arg, const_char_pointer... Args>
@@ -202,20 +208,6 @@ namespace ubn {
                 << std::get<Q>(_info_history.at("avg_duration")) << ", frequency: "
                 << std::get<Q>(_info_history.at("frequency")) << std::endl;
             return true;
-        }
-
-        constexpr void printAllInfo(const std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>>& _info_history_map) const noexcept {
-            for (const auto& [key, _] : _info_history_map) {
-                printInfo(key.c_str(), m_info_history_map.at(key).back());
-            }
-        }
-
-        constexpr void printAllInfoHistory(const std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>>& _info_history_map) const noexcept {
-            for (const auto& [key, _] : _info_history_map) {
-                for (const auto& info_history : m_info_history_map.at(key)) {
-                    printInfo(key.c_str(), info_history);
-                }
-            }
         }
 
         constexpr bool eraseTimePoint(const char* _tag_name) noexcept {
