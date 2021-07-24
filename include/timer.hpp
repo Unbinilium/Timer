@@ -50,7 +50,7 @@ namespace ubn {
 
         constexpr timer& operator<<(const timer& _timer) noexcept {
             const ticket_guard tg(this);
-            std::for_each(std::execution::par_unseq, m_time_point_map.begin(), m_time_point_map.end(),
+            std::for_each(std::execution::par_unseq, m_time_point_map.cbegin(), m_time_point_map.cend(),
                 [_this = this, __timer = &_timer](const auto& _pair) constexpr {
                     const auto key { _pair.first.c_str() };
                     _this->updateInfoHistory(
@@ -178,7 +178,7 @@ namespace ubn {
                 if (std::get<long>(info.at("min_duration")) > duration_count) { info.at("min_duration") = duration_count; }
                 if (std::get<long>(info.at("max_duration")) < duration_count) { info.at("max_duration") = duration_count; }
                 info.at("avg_duration") = static_cast<Q>(
-                    std::transform_reduce(std::execution::par_unseq, m_info_history_map.at(_tag_name).begin(), m_info_history_map.at(_tag_name).end(),
+                    std::transform_reduce(std::execution::par_unseq, m_info_history_map.at(_tag_name).cbegin(), m_info_history_map.at(_tag_name).cend(),
                         long { 0 },
                         [](const long& _lfs, const long& _rhs) constexpr { return _lfs + _rhs; },
                         [](const std::unordered_map<std::string, std::variant<long, Q>>& _info) constexpr { return std::get<long>(_info.at("cur_duration")); }
