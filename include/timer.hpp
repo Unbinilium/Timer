@@ -171,10 +171,7 @@ namespace ubn {
             while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) { m_info_history_map.at(_tag_name).pop_front(); }
             const auto duration_count { _duration.count() };
             auto info { m_info_history_map.at(_tag_name).back() };
-            if (std::get<long>(info.at("id")) == 0) {
-                for (const auto& key : { "min_duration", "max_duration" }) { info.at(key) = duration_count; }
-                info.at("avg_duration") = static_cast<Q>(duration_count);
-            } else {
+            if (std::get<long>(info.at("id")) != 0) {
                 if (std::get<long>(info.at("min_duration")) > duration_count) { info.at("min_duration") = duration_count; }
                 if (std::get<long>(info.at("max_duration")) < duration_count) { info.at("max_duration") = duration_count; }
                 info.at("avg_duration") = static_cast<Q>(
@@ -184,10 +181,13 @@ namespace ubn {
                         [](const std::unordered_map<std::string, std::variant<long, Q>>& _info) constexpr { return std::get<long>(_info.at("cur_duration")); }
                     ) + duration_count
                 ) / static_cast<Q>(
-                    std::get<long>(info.at("id")) <= static_cast<long>(m_info_history_size - 2)
+                    std::get<long>(info.at("id")) < static_cast<long>(m_info_history_size - 1)
                         ? m_info_history_map.at(_tag_name).size()
                         : m_info_history_size
                 );
+            } else {
+                for (const auto& key : { "min_duration", "max_duration" }) { info.at(key) = duration_count; }
+                info.at("avg_duration") = static_cast<Q>(duration_count);
             }
             info.at("id") = std::get<long>(info.at("id")) + 1;
             info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
