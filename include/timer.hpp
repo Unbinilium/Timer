@@ -226,17 +226,17 @@ namespace ubn {
 
     private:
         constexpr void lock() const noexcept {
-            const auto ticket { m_ticket_in.fetch_add(1, std::memory_order::acquire) };
+            const auto ticket { m_ticket_out.fetch_add(1, std::memory_order::acquire) };
             while (true) {
-                const auto now { m_ticket_out.load(std::memory_order::acquire) };
+                const auto now { m_ticket_rec.load(std::memory_order::acquire) };
                 if (now == ticket) { return; }
-                m_ticket_out.wait(now, std::memory_order::relaxed);
+                m_ticket_rec.wait(now, std::memory_order::relaxed);
             }
         }
 
         constexpr void unlock() const noexcept {
-            m_ticket_out.fetch_add(1, std::memory_order::release);
-            m_ticket_out.notify_all();
+            m_ticket_rec.fetch_add(1, std::memory_order::release);
+            m_ticket_rec.notify_all();
         }
 
         struct ticket_guard {
@@ -251,7 +251,7 @@ namespace ubn {
         std::map<std::string, std::chrono::time_point<T>> m_time_point_map;
         std::map<std::string, std::deque<std::unordered_map<std::string, std::variant<long, Q>>>> m_info_history_map;
 
-        alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_in;
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_out;
+        alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_rec;
     };
 }
