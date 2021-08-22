@@ -23,14 +23,16 @@ namespace ubn {
         typename Q = double
     > class timer {
     public:
+        template <std::convertible_to<std::string_view> Arg>
         constexpr explicit timer(
-            const std::string_view& _self_tag_name = "timer",
+            const Arg& _self_tag_name = "timer",
             const std::size_t& _info_history_size = 5
         ) noexcept : m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) { setTag(m_self_tag_name); }
 
+        template <std::convertible_to<std::string_view> Arg>
         constexpr explicit timer(
             const std::map<std::string_view, std::chrono::time_point<T>>& _time_point_map,
-            const std::string_view& _self_tag_name,
+            const Arg& _self_tag_name,
             const std::size_t& _info_history_size
         ) noexcept : m_time_point_map(_time_point_map), m_self_tag_name(_self_tag_name), m_info_history_size(_info_history_size) { setTag(m_self_tag_name); }
 
@@ -58,7 +60,7 @@ namespace ubn {
             return *this;
         }
 
-        template <std::convertible_to<std::string_view>  Arg>
+        template <std::convertible_to<std::string_view> Arg>
         constexpr auto operator[](const Arg& _tag_name) const noexcept {
             return getInfo(_tag_name);
         }
