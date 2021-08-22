@@ -31,23 +31,23 @@ Defined in header `timer.hpp`, namespace `ubn`:
 
 ```cpp
 template <
-    typename T = std::chrono::high_resolution_clock,
-    typename P = std::chrono::milliseconds,
-    typename Q = double
+    typename Clock = std::chrono::high_resolution_clock,
+    typename Precision = std::chrono::milliseconds,
+    typename Unit = double
 > class timer;
 ```
 
-`T` is used for specifing the clock type, `P` for specifying the time precision type and `Q` for specifying the time casting unit of (`avg_duration` and `frequency`). The basic data structure of timer are listed as follows:
+`Clock` is used for specifing the clock type, `Precision` for specifying the time precision unit type and `Unit` for specifying the time casting unit of (`avg_duration` and `frequency`). The basic data structure of timer are listed as follows:
 
 ```cpp
 std::map<
     std::string_view,
-    std::chrono::time_point<T>
+    std::chrono::time_point<Clock>
 > m_time_point_map;
 
 std::map<
     std::string_view,
-    std::deque<std::unordered_map<std::string_view, std::variant<long, Q>>>
+    std::deque<std::unordered_map<std::string_view, std::variant<long, Unit>>>
 > m_info_history_map;
 ```
 
@@ -56,7 +56,7 @@ All the availiable keys of info history map:
 | Type   | Key                                                  |
 | ------ | ---------------------------------------------------- |
 | `long` | `id`, `cur_duration`, `min_duration`, `max_duration` |
-| `Q`    | `avg_duration`, `frequency`                          |
+| `Unit` | `avg_duration`, `frequency`                          |
 
 
 ## Member functions
@@ -74,7 +74,7 @@ explicit timer(
 
 template <std::convertible_to<std::string_view> Arg>
 explicit timer(
-    const std::map<std::string_view, std::chrono::time_point<T>>& _time_point_map,
+    const std::map<std::string_view, std::chrono::time_point<Clock>>& _time_point_map,
     const Arg& _self_tag_name,
     const std::size_t& _info_history_size
 );
