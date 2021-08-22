@@ -41,13 +41,13 @@ template <
 
 ```cpp
 std::map<
-    std::string,
+    std::string_view,
     std::chrono::time_point<T>
 > m_time_point_map;
 
 std::map<
-    std::string,
-    std::deque<std::unordered_map<std::string, std::variant<long, Q>>>
+    std::string_view,
+    std::deque<std::unordered_map<std::string_view, std::variant<long, Q>>>
 > m_info_history_map;
 ```
 
@@ -63,17 +63,17 @@ All the availiable keys of info history map:
 
 - Constructor
 
-If init a timer with a specified `_self_tag_name` (not an empty string `""`), it will print all info history records with the identifier of this tag name after the timer was destructed. The default info history records limit is set to `5` by `_info_history_size`, it should always larger than `0`.
+If init a timer with a specified `_self_tag_name` (not an empty string_view `""`), it will print all info history records with the identifier of this tag name after the timer was destructed. The default info history records limit is set to `5` by `_info_history_size`, it should always larger than `0`.
 
  ```cpp
 explicit timer(
-    const char* _self_tag_name = "timer",
+    const std::string_view& _self_tag_name = "timer",
     const std::size_t& _info_history_size = 5
 );
 
 explicit timer(
-    const std::map<std::string, std::chrono::time_point<T>>& _time_point_map,
-    const char* _self_tag_name,
+    const std::map<std::string_view, std::chrono::time_point<T>>& _time_point_map,
+    const std::string_view& _self_tag_name,
     const std::size_t& _info_history_size
 );
  ```
@@ -94,25 +94,25 @@ timer& operator<<(const timer& _timer);
 
 Use operator `[]` to get the last updated info history record by tag name, alternative to call function `getInfo()` with a single parameter directly.
 ```cpp
-auto operator[](const char* _tag_name);
+auto operator[](const std::string_view& _tag_name);
 ```
 
 
 - General
 
-| Function name                            | Design purpose                                               |
-| :--------------------------------------- | :----------------------------------------------------------- |
-| `auto setTag(const char* ...)`           | Set tag(s) by tag name(s), set new tag(s) and initialize info history, else update the tag's time point and update info history, returns time point |
-| `bool eraseTag(const char* ...)`         | Erase tag(s) by tag name(s), returns `false` returns `false` if has at least one tag name is not found, otherwise is `true` |
-| `auto getTimePoint(const char*)`         | Get time point by tag name                                   |
-| `auto getInfo(const char*)`              | Get tag info by tag name, returns an unordered map that includes the last updated info |
-| `void printInfo(const char* ...)`        | Print last updated info by tag name(s)                       |
-| `void printAllInfo()`                    | Print all last updated info for all tag(s)                   |
-| `auto getInfoHistory(const char*)`       | Get tag info history by tag name, returns a deque that includes all the info history of this tag |
-| `void printInfoHistory(const char* ...)` | Print tag info history recored(s) by tag name(s), the default size of info history records is `5` |
-| `void printAllInfoHistory()`             | Print all info history record(s) for all tag(s)              |
-| `bool clearInfoHistory(const char* ...)` | Clear tag(s) info history record(s) by tag name(s), returns `false` if has at least one tag name is not found, otherwise is `true` |
-| `void clear()`                           | Clear time point map and info history map                    |
+| Function name                                        | Design purpose                                               |
+| :--------------------------------------------------- | :----------------------------------------------------------- |
+| `auto setTag(const std::string_view& ...)`           | Set tag(s) by tag name(s), set new tag(s) and initialize info history, else update the tag's time point and update info history, returns time point |
+| `bool eraseTag(const std::string_view& ...)`         | Erase tag(s) by tag name(s), returns `false` returns `false` if has at least one tag name is not found, otherwise is `true` |
+| `auto getTimePoint(const std::string_view&)`         | Get time point by tag name                                   |
+| `auto getInfo(const std::string_view&)`              | Get tag info by tag name, returns an unordered map that includes the last updated info |
+| `void printInfo(const std::string_view& ...)`        | Print last updated info by tag name(s)                       |
+| `void printAllInfo()`                                | Print all last updated info for all tag(s)                   |
+| `auto getInfoHistory(const std::string_view&)`       | Get tag info history by tag name, returns a deque that includes all the info history of this tag |
+| `void printInfoHistory(const std::string_view& ...)` | Print tag info history recored(s) by tag name(s), the default size of info history records is `5` |
+| `void printAllInfoHistory()`                         | Print all info history record(s) for all tag(s)              |
+| `bool clearInfoHistory(const std::string_view& ...)` | Clear tag(s) info history record(s) by tag name(s), returns `false` if has at least one tag name is not found, otherwise is `true` |
+| `void clear()`                                       | Clear time point map and info history map                    |
 
 ## License
 
