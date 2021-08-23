@@ -70,14 +70,14 @@ namespace ubn {
         constexpr auto setTag(const Args&... _args) noexcept {
             const ticket_guard tg(this);
             const auto time_point { Clock::now() };
-            ([_this = this, _time_point = &time_point, __args = _args]() constexpr {
-                if (_this->m_time_point_map.contains(__args)) {
-                    const auto duration { std::chrono::duration_cast<Precision>(*_time_point - _this->m_time_point_map.at(__args)) };
-                    _this->m_time_point_map.at(__args) = *_time_point;
-                    _this->updateInfoHistory(__args, std::move(duration));
+            ([_this = this, _time_point = &time_point, __args = &_args]() constexpr {
+                if (_this->m_time_point_map.contains(*__args)) {
+                    const auto duration { std::chrono::duration_cast<Precision>(*_time_point - _this->m_time_point_map.at(*__args)) };
+                    _this->m_time_point_map.at(*__args) = *_time_point;
+                    _this->updateInfoHistory(*__args, std::move(duration));
                 } else {
-                    _this->m_time_point_map.emplace(__args, *_time_point);
-                    _this->initInfoHistory(__args, *_time_point);
+                    _this->m_time_point_map.emplace(*__args, *_time_point);
+                    _this->initInfoHistory(*__args, *_time_point);
                 }
             }(), ...);
             return time_point;
@@ -129,10 +129,10 @@ namespace ubn {
         template <std::convertible_to<std::string_view>... Args>
         constexpr void printInfoHistory(const Args&... _args) const noexcept {
             const ticket_guard tg(this);
-            ([_this = this, __args = _args]() constexpr {
-                if (_this->m_info_history_map.contains(__args)) {
-                    for (const auto& info_history : _this->m_info_history_map.at(__args)) {
-                        _this->printInfo(__args, info_history);
+            ([_this = this, __args = &_args]() constexpr {
+                if (_this->m_info_history_map.contains(*__args)) {
+                    for (const auto& info_history : _this->m_info_history_map.at(*__args)) {
+                        _this->printInfo(*__args, info_history);
                     }
                 }
             }(), ...);
