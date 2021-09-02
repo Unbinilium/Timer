@@ -32,12 +32,12 @@ Defined in header `timer.hpp`, namespace `ubn`:
 ```cpp
 template <
     typename Clock = std::chrono::high_resolution_clock,
-    typename Precision = std::chrono::milliseconds,
-    typename Unit = double
+    typename Unit = std::chrono::milliseconds,
+    typename Precision = double
 > class timer;
 ```
 
-`Clock` is used for specifing the clock type, `Precision` for specifying the time precision unit type and `Unit` for specifying the time casting unit of (`avg_duration` and `frequency`). The basic data structure of timer are listed as follows:
+`Clock` is used for specifing the clock type, `Unit` for specifying the time unit type and `Precision` for specifying the time duration casting precision of (`avg_duration` and `frequency`). The basic data structure of timer are listed as follows:
 
 ```cpp
 std::map<
@@ -53,10 +53,10 @@ std::map<
 
 All the availiable keys of info history map:
 
-| Type   | Key                                                  |
-| ------ | ---------------------------------------------------- |
-| `long` | `id`, `cur_duration`, `min_duration`, `max_duration` |
-| `Unit` | `avg_duration`, `frequency`                          |
+| Type        | Key                                                  |
+| ----------- | ---------------------------------------------------- |
+| `long`      | `id`, `cur_duration`, `min_duration`, `max_duration` |
+| `Precision` | `avg_duration`, `frequency`                          |
 
 
 ## Member functions

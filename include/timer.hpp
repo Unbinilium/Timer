@@ -20,8 +20,8 @@
 namespace ubn {
     template <
         typename Clock = std::chrono::high_resolution_clock,
-        typename Precision = std::chrono::milliseconds,
-        typename Unit = double
+        typename Unit = std::chrono::milliseconds,
+        typename Precision = double
     > class timer {
     public:
         template <std::convertible_to<std::string_view> Arg>
@@ -54,7 +54,7 @@ namespace ubn {
                     const auto key { _pair.first };
                     _this->updateInfoHistory(
                         key,
-                        std::chrono::duration_cast<Precision>(_this->m_time_point_map.at(key) - __timer->getTimePoint(key))
+                        std::chrono::duration_cast<Unit>(_this->m_time_point_map.at(key) - __timer->getTimePoint(key))
                     );
                 }
             );
@@ -72,7 +72,7 @@ namespace ubn {
             const auto time_point { Clock::now() };
             ([_this = this, _time_point = &time_point, __args = &_args]() constexpr {
                 if (_this->m_time_point_map.contains(*__args)) {
-                    const auto duration { std::chrono::duration_cast<Precision>(*_time_point - _this->m_time_point_map.at(*__args)) };
+                    const auto duration { std::chrono::duration_cast<Unit>(*_time_point - _this->m_time_point_map.at(*__args)) };
                     _this->m_time_point_map.at(*__args) = *_time_point;
                     _this->updateInfoHistory(*__args, std::move(duration));
                 } else {
@@ -102,7 +102,7 @@ namespace ubn {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
                 ? m_info_history_map.at(_tag_name).back()
-                : std::unordered_map<std::string_view, std::variant<long, Unit>>();
+                : std::unordered_map<std::string_view, std::variant<long, Precision>>();
         }
 
         template <std::convertible_to<std::string_view>... Args>
@@ -123,7 +123,7 @@ namespace ubn {
             const ticket_guard tg(this);
             return m_info_history_map.contains(_tag_name)
                 ? m_info_history_map.at(_tag_name)
-                : std::deque<std::unordered_map<std::string_view, std::variant<long, Unit>>>();
+                : std::deque<std::unordered_map<std::string_view, std::variant<long, Precision>>>();
         }
 
         template <std::convertible_to<std::string_view>... Args>
@@ -163,46 +163,46 @@ namespace ubn {
     protected:
         template <std::convertible_to<std::string_view> Arg>
         constexpr void initInfoHistory(const Arg& _tag_name, const std::chrono::time_point<Clock>& _time_point) noexcept {
-            std::unordered_map<std::string_view, std::variant<long, Unit>> info;
+            std::unordered_map<std::string_view, std::variant<long, Precision>> info;
             info.emplace("time_point_at", _time_point.time_since_epoch().count());
             for (const auto& key : { "id", "cur_duration", "min_duration", "max_duration" }) { info.emplace(key, 0); }
-            for (const auto& key : { "avg_duration", "frequency" }) { info.emplace(key, static_cast<Unit>(0)); }
-            std::deque<std::unordered_map<std::string_view, std::variant<long, Unit>>> info_history { info };
+            for (const auto& key : { "avg_duration", "frequency" }) { info.emplace(key, static_cast<Precision>(0)); }
+            std::deque<std::unordered_map<std::string_view, std::variant<long, Precision>>> info_history { info };
             m_info_history_map.emplace(_tag_name, std::move(info_history));
         }
 
         template <std::convertible_to<std::string_view> Arg>
-        constexpr void updateInfoHistory(const Arg& _tag_name, const Precision& _duration) noexcept {
+        constexpr void updateInfoHistory(const Arg& _tag_name, const Unit& _duration) noexcept {
             while (m_info_history_map.at(_tag_name).size() >= m_info_history_size) { m_info_history_map.at(_tag_name).pop_front(); }
             const auto duration_count { _duration.count() };
             auto info { m_info_history_map.at(_tag_name).back() };
             if (std::get<long>(info.at("id")) != 0) {
                 if (std::get<long>(info.at("min_duration")) > duration_count) { info.at("min_duration") = duration_count; }
                 if (std::get<long>(info.at("max_duration")) < duration_count) { info.at("max_duration") = duration_count; }
-                info.at("avg_duration") = static_cast<Unit>(
+                info.at("avg_duration") = static_cast<Precision>(
                     std::transform_reduce(std::execution::par_unseq, m_info_history_map.at(_tag_name).cbegin(), m_info_history_map.at(_tag_name).cend(),
                         long { 0 },
                         [](const long& _lfs, const long& _rhs) constexpr { return _lfs + _rhs; },
-                        [](const std::unordered_map<std::string_view, std::variant<long, Unit>>& _info) constexpr { return std::get<long>(_info.at("cur_duration")); }
+                        [](const std::unordered_map<std::string_view, std::variant<long, Precision>>& _info) constexpr { return std::get<long>(_info.at("cur_duration")); }
                     ) + duration_count
-                ) / static_cast<Unit>(
+                ) / static_cast<Precision>(
                     std::get<long>(info.at("id")) < static_cast<long>(m_info_history_size - 1)
                         ? m_info_history_map.at(_tag_name).size()
                         : m_info_history_size
                 );
             } else {
                 for (const auto& key : { "min_duration", "max_duration" }) { info.at(key) = duration_count; }
-                info.at("avg_duration") = static_cast<Unit>(duration_count);
+                info.at("avg_duration") = static_cast<Precision>(duration_count);
             }
             info.at("id") = std::get<long>(info.at("id")) + 1;
             info.at("time_point_at") = m_time_point_map.at(_tag_name).time_since_epoch().count();
             info.at("cur_duration") = duration_count;
-            info.at("frequency") = static_cast<Unit>(1) / std::chrono::duration<Unit, std::ratio<1l>>(_duration).count();
+            info.at("frequency") = static_cast<Precision>(1) / std::chrono::duration<Precision, std::ratio<1l>>(_duration).count();
             m_info_history_map.at(_tag_name).push_back(std::move(info));
         }
 
         template <std::convertible_to<std::string_view> Arg>
-        constexpr bool printInfo(const Arg& _tag_name, const std::unordered_map<std::string_view, std::variant<long, Unit>>& _info_history) const noexcept {
+        constexpr bool printInfo(const Arg& _tag_name, const std::unordered_map<std::string_view, std::variant<long, Precision>>& _info_history) const noexcept {
             std::cout << "["
                 << m_self_tag_name << "] Info '"
                 << _tag_name << "' -> "
@@ -211,8 +211,8 @@ namespace ubn {
                 << std::get<long>(_info_history.at("cur_duration")) << "/"
                 << std::get<long>(_info_history.at("min_duration")) << "/"
                 << std::get<long>(_info_history.at("max_duration")) << "/"
-                << std::get<Unit>(_info_history.at("avg_duration")) << ", frequency: "
-                << std::get<Unit>(_info_history.at("frequency")) << std::endl;
+                << std::get<Precision>(_info_history.at("avg_duration")) << ", frequency: "
+                << std::get<Precision>(_info_history.at("frequency")) << std::endl;
             return true;
         }
 
@@ -257,7 +257,7 @@ namespace ubn {
         const std::size_t m_info_history_size;
 
         std::map<std::string_view, std::chrono::time_point<Clock>> m_time_point_map;
-        std::map<std::string_view, std::deque<std::unordered_map<std::string_view, std::variant<long, Unit>>>> m_info_history_map;
+        std::map<std::string_view, std::deque<std::unordered_map<std::string_view, std::variant<long, Precision>>>> m_info_history_map;
 
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_out;
         alignas(2 * sizeof(std::max_align_t)) mutable std::atomic<std::size_t> m_ticket_rec;
